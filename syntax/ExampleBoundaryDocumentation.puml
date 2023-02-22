@@ -1,0 +1,20 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+Boundary(b, "A Boundary") {
+}
+
+Container_Boundary(cb, "A Container Boundary") {
+}
+
+System_Boundary(sb, "A System Boundary") {
+}
+
+' defines a new border style incl. new border type
+AddBoundaryTag("repository", $bgColor="green", $fontColor="white", $borderColor="white", $shadowing="true", $shape = RoundedBoxShape(), $type="GitHub repository")
+
+Boundary(c4Respository, "plantuml-stdlib/C4-PlantUML", $tags="repository") {
+  Component(readMe, "README.md", "Markdown")
+}
+
+@enduml

@@ -12,6 +12,8 @@ You can render the PlantUML code on their web server renderer [here](https://www
 
 <img src="static/images/plant_uml_web.png" width="1000px"/>
 
+> Some syntax and example files are also stored in the `/syntax` directory of this repository.
+
 ### How to set up on IDE
 
 Follow the steps on this [repository](https://github.com/stawirej/c4-intellij-live-template) for PlantUML IntelliJ Live Template.

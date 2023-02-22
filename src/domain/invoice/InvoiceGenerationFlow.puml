@@ -22,6 +22,13 @@ Boundary(ScheduledInvoiceGenerationService, "ScheduledInvoiceGenerationService.j
     Component(generateInvoiceByTeamIdFilteredByDateFromAndDateTo, "generateInvoiceByTeamIdFilteredByDateFromAndDateTo()", "4.", "void")
 }
 
+Boundary(generateInvoiceByTeamIdFilteredByDateFromAndDateTo_boundary, "Process: generateInvoiceByTeamIdFilteredByDateFromAndDateTo()"){
+    Component(fetchInvoicePeriodByTeamId, "invoicePeriodService.fetchInvoicePeriodByTeamId()", "Fetch tean Invoice Period. Throw ResourceNotFoundException when it is null.")
+    Component(fetchChargeRecordByTeamIdAndStatus, "chargeRecordsRepository.findAllByTeamIdAndStatusAndStartDateGreaterThanEqualAndStartDateLessThanEqual()", "Params: teamId, ChargeRecordsStatus.Pending, dateFrom, dateTo.")
+    Component(downloadInvoiceTemplateByTenantId, "invoiceTemplateService.downloadInvoiceTemplateByTenantId()", "Download invoice template from s3 based on tenant id.")
+    Component(checkTeamIfInvoiceRequirementsAcquired, "checkTeamIfInvoiceRequirementsAcquired()", "Throws BillingDetailsNotFound and ResourceNotFound exception and ends process if do so.")
+}
+
 Container(InvoiceDevelopGenerationQueue, "Invoice-Develop-GenerationQueue", "Amazon SQS")
 
 ' # End: Declarations
@@ -30,6 +37,7 @@ Container(InvoiceDevelopGenerationQueue, "Invoice-Develop-GenerationQueue", "Ama
 Lay_R(ScheduledInvoiceGenerationJob, ScheduledInvoiceGenerationService)
 Lay_R(ScheduledInvoiceGenerationService, InvoiceDevelopGenerationQueue)
 Lay_D(InvoiceDevelopGenerationQueue, InvoiceGenerationListener)
+Lay_R(InvoiceDevelopGenerationQueue, generateInvoiceByTeamIdFilteredByDateFromAndDateTo_boundary)
 Lay_D(sendInvoiceGenerationQueueEvent, generateInvoiceByTeamIdFilteredByDateFromAndDateTo)
 
 
@@ -41,6 +49,9 @@ Rel_R(sendInvoiceGenerationQueueEvent, InvoiceDevelopGenerationQueue,"Send queue
 Rel_D(InvoiceDevelopGenerationQueue, generateInvoice, "")
 Rel_R(generateInvoice, generateInvoiceByTeamIdFilteredByDateFromAndDateTo, "Invokes function from ScheduledInvoiceGenerationService.")
 
+Rel_D(fetchInvoicePeriodByTeamId, fetchChargeRecordByTeamIdAndStatus, "Collect list of charge records of team.")
+Rel_D(fetchChargeRecordByTeamIdAndStatus, downloadInvoiceTemplateByTenantId, "Ends process if list of team chargedRecords is empty. Subscription item belongs to chargedRecords.")
+Rel_D(downloadInvoiceTemplateByTenantId, checkTeamIfInvoiceRequirementsAcquired, "")
 
 
 @enduml
