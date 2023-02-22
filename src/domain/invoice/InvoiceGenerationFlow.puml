@@ -1,0 +1,46 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' # Start: Declarations
+' Job classes
+Boundary(ScheduledInvoiceGenerationJob, "ScheduledInvoiceGenerationJob.java"){
+    Component(processScheduledInvoiceGeneration, "processScheduledInvoiceGeneration()", "Job that looks for scheduled invoice generation. Interval 5-10 minutes.", "void")
+}
+
+' Listener classes
+Boundary(InvoiceGenerationListener,"InvoiceGenerationListener.java"){
+    Component(generateInvoice, "generateInvoice()", "4. Receive and process invoice queue event.", "void")
+}
+
+
+' Service classes
+Boundary(ScheduledInvoiceGenerationService, "ScheduledInvoiceGenerationService.java"){
+    Component(processAllScheduledForInvoiceGeneration, "processAllScheduledForInvoiceGeneration()", "1. Fetches scheduled invoice items.","void")
+    Component(fetchInvoiceScheduledForGeneration, "fetchInvoiceScheduledForGeneration()", "2. Fetches list scheduled invoice for generation.", "List<InvoiceGenerationSchedule>")
+    Component(sendInvoiceGenerationQueueEvent, "sendInvoiceGenerationQueueEvent()", "3. Send queue event message of each InvoiceGenerationSchedule item fetched on list.", "void")
+    Component(generateInvoiceByTeamIdFilteredByDateFromAndDateTo, "generateInvoiceByTeamIdFilteredByDateFromAndDateTo()", "4.", "void")
+}
+
+Container(InvoiceDevelopGenerationQueue, "Invoice-Develop-GenerationQueue", "Amazon SQS")
+
+' # End: Declarations
+
+' -> Define layout of classes
+Lay_R(ScheduledInvoiceGenerationJob, ScheduledInvoiceGenerationService)
+Lay_R(ScheduledInvoiceGenerationService, InvoiceDevelopGenerationQueue)
+Lay_D(InvoiceDevelopGenerationQueue, InvoiceGenerationListener)
+Lay_D(sendInvoiceGenerationQueueEvent, generateInvoiceByTeamIdFilteredByDateFromAndDateTo)
+
+
+' -> Define relationship of classes and flow
+Rel_R(processScheduledInvoiceGeneration, processAllScheduledForInvoiceGeneration, "Job is triggered when scheduled invoice items are found.")
+Rel_D(processAllScheduledForInvoiceGeneration, fetchInvoiceScheduledForGeneration,"Invoice items are fetched into a list.")
+Rel_R(fetchInvoiceScheduledForGeneration, sendInvoiceGenerationQueueEvent,"A queue event message is send for every invoice generation item. Body: { teamId, dateFrom, dateTo }")
+Rel_R(sendInvoiceGenerationQueueEvent, InvoiceDevelopGenerationQueue,"Send queue event message to AWS SQS ")
+Rel_D(InvoiceDevelopGenerationQueue, generateInvoice, "")
+Rel_R(generateInvoice, generateInvoiceByTeamIdFilteredByDateFromAndDateTo, "Invokes function from ScheduledInvoiceGenerationService.")
+
+
+
+@enduml
